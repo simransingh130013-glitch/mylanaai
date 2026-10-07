@@ -31,3 +31,7 @@ Lana uses the browser's speech synthesis voices and prefers available female Eng
 
 ## Text Command + Voice Reply
 Voice recognition is disabled in this build. Tap **Talk to Lana** to focus the text command field. Type a command and press Send; Lana uses the available iPhone/browser Speech Synthesis voice to speak her response.
+
+
+## Lana 2.2 — reliable iPhone speech
+Talk to Lana uses text only. Send is a direct tap action, and Lana speaks the response immediately without waiting for Safari voice-list loading. The service-worker cache was bumped so GitHub Pages receives the updated JavaScript.

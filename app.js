@@ -18,67 +18,33 @@ function speak(text){
   headline.textContent = text;
   addLog("Lana", text);
 
-  if (!("speechSynthesis" in window)) return;
-
-  speechSynthesis.cancel();
-
-  const speakNow = () => {
-    const voices = speechSynthesis.getVoices();
-
-    const preferredNames = [
-      "Samantha",
-      "Ava",
-      "Karen",
-      "Moira",
-      "Victoria",
-      "Allison",
-      "Zoe"
-    ];
-
-    let voice = state.voiceName ? voices.find(v => v.name === state.voiceName) : null;
-    if (!voice) voice = voices.find(v =>
-      preferredNames.some(name =>
-        v.name.toLowerCase().includes(name.toLowerCase())
-      )
-    );
-
-    if (!voice) {
-      voice = voices.find(v =>
-        v.lang.toLowerCase().startsWith("en") &&
-        /female|samantha|ava|karen|moira|victoria|allison|zoe/i.test(v.name)
-      );
-    }
-
-    if (!voice) {
-      voice = voices.find(v =>
-        v.lang.toLowerCase().startsWith("en")
-      );
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang || "en-IN";
-    } else {
-      utterance.lang = "en-IN";
-    }
-
-    // Feminine, slightly slower futuristic AI character
-    utterance.rate = 0.92;
-    utterance.pitch = 1.12;
-    utterance.volume = 1.0;
-
-    speechSynthesis.speak(utterance);
-  };
-
-  // iPhone/Safari can load voices asynchronously
-  if (speechSynthesis.getVoices().length === 0) {
-    speechSynthesis.onvoiceschanged = speakNow;
-  } else {
-    speakNow();
+  if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+    toast("Speech is not available in this browser");
+    return;
   }
+
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  try { synth.resume(); } catch(e) {}
+
+  const utterance = new SpeechSynthesisUtterance(String(text));
+  utterance.rate = 0.92;
+  utterance.pitch = 1.12;
+  utterance.volume = 1.0;
+  utterance.lang = "en-IN";
+
+  const voices = synth.getVoices();
+  const preferredNames = ["Samantha","Ava","Karen","Moira","Victoria","Allison","Zoe"];
+  let voice = state.voiceName ? voices.find(v => v.name === state.voiceName) : null;
+  if (!voice) voice = voices.find(v => preferredNames.some(n => v.name.toLowerCase().includes(n.toLowerCase())));
+  if (!voice) voice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en"));
+  if (voice) { utterance.voice = voice; utterance.lang = voice.lang || "en-IN"; }
+
+  // Speak immediately. Do not wait for onvoiceschanged: on iPhone/Safari that
+  // can move speech outside the user's tap gesture and prevent playback.
+  synth.speak(utterance);
 }
+
 function open(url){location.href=url}
 function searchGoogle(q){open("https://www.google.com/search?q="+encodeURIComponent(q))}
 function searchYouTube(q){open("https://www.youtube.com/results?search_query="+encodeURIComponent(q))}
@@ -125,10 +91,9 @@ mic.onclick=()=>{
   orb.classList.add("listening");
   $("#status").textContent="TEXT COMMAND MODE";
   sub.textContent="Voice recognition isn't supported here. Type a command below.";
-  toast("Use text commands — Lana will speak the response.");
+  toast("Type a command — Lana will speak the response.");
   $("#command").focus();
   setTimeout(()=>{mic.classList.remove("listening");orb.classList.remove("listening");$("#status").textContent="SYSTEM ONLINE"},900);
-  if ("speechSynthesis" in window) speak("Voice recognition is not supported here. Type your command and I will speak my response.");
 };
 
 $("#send").onclick=()=>process($("#command").value);
